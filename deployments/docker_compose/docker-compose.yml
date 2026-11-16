@@ -1,0 +1,67 @@
+services:
+  # --- Main Application Service ---
+  aac-syncthing:
+    image: "lscr.io/linuxserver/syncthing:v2.0.15-ls210"
+    container_name: "aac-syncthing"
+    hostname: "sync"
+    restart: "always"
+
+
+    environment:
+      PUID: "3001"
+      PGID: "3001"
+      TZ: "Europe/Berlin"
+
+    ports:
+      - "8384:8384/tcp"
+      - "22000:22000/tcp"
+      - "22000:22000/udp"
+      - "21027:21027/udp"
+
+    volumes:
+      - "/export/docker/aac-syncthing/config:/config"
+      - "/export/docker/aac-syncthing/data:/public"
+      - "/export/docker/aac-syncthing/private:/private"
+
+    networks:
+      - exposed
+      - interconnect
+      - secured
+      - stack_internal
+
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.aac-syncthing.rule: "Host(`sync.example.com`)"
+      traefik.http.routers.aac-syncthing.entrypoints: "websecure"
+      traefik.http.routers.aac-syncthing.tls: "true"
+      traefik.http.routers.aac-syncthing.tls.certresolver: "ionos"
+      traefik.docker.network: "services-secured"
+      traefik.http.services.aac-syncthing.loadbalancer.server.port: "8384"
+      traefik.http.services.aac-syncthing.loadbalancer.server.scheme: "http"
+      auto-dns.createWildcard.aac-syncthing: "false"
+      auto-dns.customDNS.aac-syncthing: "true"
+      auto-dns.customDOMAIN.aac-syncthing: "example.com"
+      auto-dns.customHost.aac-syncthing: "sync"
+      homepage.group: "Netzwerk & Sicherheit"
+      homepage.name: "Syncthing"
+      homepage.href: "https://sync.example.com"
+      homepage.icon: "/icons/syncthing.png"
+      homepage.description: "Dezentrale Datei-Synchronisation"
+
+
+
+
+networks:
+  secured:
+    name: "services-secured"
+    external: true
+  exposed:
+    name: "services-exposed"
+    external: true
+  interconnect:
+    name: "docker-default"
+    external: true
+  stack_internal:
+    name: "aac-syncthing_stack_internal"
+    driver: "bridge"
+

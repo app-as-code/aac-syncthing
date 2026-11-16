@@ -1,0 +1,88 @@
+service:
+  name: aac-syncthing
+  image_repo: lscr.io/linuxserver/syncthing
+  image_tag: v2.0.15-ls210
+  description: Dezentrale Datei-Synchronisation
+  icon: /icons/syncthing.png
+  category: Netzwerk & Sicherheit
+  stage: prod
+  hostname: sync
+ports:
+- name: web
+  port: 8384
+  external_port: 8384
+  protocol: TCP
+- name: sync-tcp
+  port: 22000
+  external_port: 22000
+  protocol: TCP
+- name: sync-udp
+  port: 22000
+  external_port: 22000
+  protocol: UDP
+- name: discovery
+  port: 21027
+  external_port: 21027
+  protocol: UDP
+config:
+  domain_name: example.com
+  generate_hostname: false
+  integrations:
+    homepage:
+      enabled: true
+    autodns:
+      enabled: true
+    traefik:
+      enabled: true
+      cert_resolver: ionos
+      entrypoint: websecure
+  schema_version: 2
+stage_overrides:
+  prod:
+    config:
+      generate_hostname: false
+    service:
+      hostname: sync
+volumes:
+  config:
+    description: Syncthing application configuration
+  data:
+    description: Public sync data folder
+  private:
+    description: Private sync data folder
+deployment_strategy:
+  main:
+    enabled: true
+    target_stage: prod
+  dev:
+    enabled: true
+    target_stage: dev
+  test:
+    enabled: false
+    target_stage: test
+  ansible-dev:
+    enabled: true
+    target_stage: dev
+  iac-dev:
+    enabled: true
+    target_stage: dev
+  template-dev:
+    enabled: true
+    target_stage: dev
+deployments:
+  docker_compose:
+    restart_policy: always
+    host_base_path: /export/docker
+    volumes:
+    - config:/config
+    - data:/public
+    - private:/private
+    environment:
+      PUID: '{{ vars.PUID }}'
+      PGID: '{{ vars.PGID }}'
+      TZ: '{{ vars.TZ }}'
+vars:
+  PUID: '3001'
+  PGID: '3001'
+  TZ: Europe/Berlin
+secrets: {}
